@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+	<string name="If you enjoy using %@, would you mind taking a moment to rate it? It won't take more than a minute. Thanks for your support!">Eğer %@ uygulamasını kullanmaktan keyif alıyorsanız, onu değerlendirmek için zaman ayırabilir misiniz? Desteğiniz için teşekkür ederiz!</string>
+	<string name="Rate %@">%@ uygulamasını değerlendir</string>
+	<string name="No, Thanks">Hayır, teşekkürler</string>
+	<string name="Remind me later">Daha sonra hatırlat</string>
+</resources>

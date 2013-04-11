@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+	<string name="If you enjoy using %@, would you mind taking a moment to rate it? It won't take more than a minute. Thanks for your support!">Si vous aimez %@, voulez-vous prendre un moment pour l'évaluer? Cela ne vous prendra pas plus d'une minute. Merci de votre soutien!</string>
+	<string name="Rate %@">Notez %@</string>
+	<string name="No, Thanks">Non, Merci</string>
+	<string name="Remind me later">Rappelez-moi plus tard</string>
+</resources>

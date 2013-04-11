@@ -60,6 +60,7 @@ static double _timeBeforeReminding = 1;
 static BOOL _debug = NO;
 static id<AppiraterDelegate> _delegate;
 static BOOL _usesAnimation = TRUE;
+static BOOL _openInAppStore = NO;
 static UIStatusBarStyle _statusBarStyle;
 static BOOL _modalOpen = false;
 
@@ -72,7 +73,7 @@ static BOOL _modalOpen = false;
 - (void)hideRatingAlert;
 @end
 
-@implementation Appirater 
+@implementation Appirater
 
 @synthesize ratingAlert;
 
@@ -104,6 +105,9 @@ static BOOL _modalOpen = false;
 }
 + (void)setUsesAnimation:(BOOL)animation {
 	_usesAnimation = animation;
+}
++ (void)setOpenInAppStore:(BOOL)openInAppStore {
+    _openInAppStore = openInAppStore;
 }
 + (void)setStatusBarStyle:(UIStatusBarStyle)style {
 	_statusBarStyle = style;
@@ -152,7 +156,7 @@ static BOOL _modalOpen = false;
             appirater = [[Appirater alloc] init];
 			appirater.delegate = _delegate;
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:
-                UIApplicationWillResignActiveNotification object:nil];
+             UIApplicationWillResignActiveNotification object:nil];
         });
 	}
 	
@@ -161,10 +165,10 @@ static BOOL _modalOpen = false;
 
 - (void)showRatingAlert {
 	UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:APPIRATER_MESSAGE_TITLE
-														 message:APPIRATER_MESSAGE
-														delegate:self
-											   cancelButtonTitle:APPIRATER_CANCEL_BUTTON
-											   otherButtonTitles:APPIRATER_RATE_BUTTON, APPIRATER_RATE_LATER, nil];
+                                                        message:APPIRATER_MESSAGE
+                                                       delegate:self
+                                              cancelButtonTitle:APPIRATER_CANCEL_BUTTON
+                                              otherButtonTitles:APPIRATER_RATE_BUTTON, APPIRATER_RATE_LATER, nil];
 	self.ratingAlert = alertView;
 	[alertView show];
 	
@@ -200,7 +204,7 @@ static BOOL _modalOpen = false;
 		return NO;
 	
 	// has the user already rated the app?
-	if ([userDefaults boolForKey:kAppiraterRatedCurrentVersion])
+	if ([self userHasRatedCurrentVersion])
 		return NO;
 	
 	// if the user wanted to be reminded later, has enough time passed?
@@ -337,6 +341,14 @@ static BOOL _modalOpen = false;
 	}
 }
 
+- (BOOL)userHasDeclinedToRate {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:kAppiraterDeclinedToRate];
+}
+
+- (BOOL)userHasRatedCurrentVersion {
+    return [[NSUserDefaults standardUserDefaults] boolForKey:kAppiraterRatedCurrentVersion];
+}
+
 + (void)appLaunched {
 	[Appirater appLaunched:YES];
 }
@@ -353,7 +365,7 @@ static BOOL _modalOpen = false;
 		if (_debug)
 			NSLog(@"APPIRATER Hiding Alert");
 		[self.ratingAlert dismissWithClickedButtonIndex:-1 animated:NO];
-	}	
+	}
 }
 
 + (void)appWillResignActive {
@@ -376,6 +388,14 @@ static BOOL _modalOpen = false;
                    });
 }
 
++ (void)showPrompt {
+    if ([[Appirater sharedInstance] connectedToNetwork]
+        && ![[Appirater sharedInstance] userHasDeclinedToRate]
+        && ![[Appirater sharedInstance] userHasRatedCurrentVersion]) {
+        [[Appirater sharedInstance] showRatingAlert];
+    }
+}
+
 + (id)getRootViewController {
     UIWindow *window = [[UIApplication sharedApplication] keyWindow];
     if (window.windowLevel != UIWindowLevelNormal) {
@@ -387,7 +407,30 @@ static BOOL _modalOpen = false;
         }
     }
     
-    return [[[window subviews] objectAtIndex:0] nextResponder];
+    for (UIView *subView in [window subviews])
+    {
+        UIResponder *responder = [subView nextResponder];
+        if([responder isKindOfClass:[UIViewController class]]) {
+            return [self topMostViewController: (UIViewController *) responder];
+        }
+    }
+    
+    return nil;
+}
+
++ (UIViewController *) topMostViewController: (UIViewController *) controller {
+	BOOL isPresenting = NO;
+	do {
+		// this path is called only on iOS 6+, so -presentedViewController is fine here.
+		UIViewController *presented = [controller presentedViewController];
+		isPresenting = presented != nil;
+		if(presented != nil) {
+			controller = presented;
+		}
+		
+	} while (isPresenting);
+	
+	return controller;
 }
 
 + (void)rateApp {
@@ -395,9 +438,9 @@ static BOOL _modalOpen = false;
 	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
 	[userDefaults setBool:YES forKey:kAppiraterRatedCurrentVersion];
 	[userDefaults synchronize];
-
+    
 	//Use the in-app StoreKit view if available (iOS 6) and imported. This works in the simulator.
-	if (NSStringFromClass([SKStoreProductViewController class]) != nil) {
+	if (!_openInAppStore && NSStringFromClass([SKStoreProductViewController class]) != nil) {
 		
 		SKStoreProductViewController *storeViewController = [[SKStoreProductViewController alloc] init];
 		NSNumber *appId = [NSNumber numberWithInteger:_appId.integerValue];
@@ -412,16 +455,16 @@ static BOOL _modalOpen = false;
 			[self setStatusBarStyle:[UIApplication sharedApplication].statusBarStyle];
 			[[UIApplication sharedApplication]setStatusBarStyle:UIStatusBarStyleBlackOpaque animated:_usesAnimation];
 		}];
-	
-	//Use the standard openUrl method if StoreKit is unavailable.
+        
+        //Use the standard openUrl method if StoreKit is unavailable.
 	} else {
 		
-		#if TARGET_IPHONE_SIMULATOR
+#if TARGET_IPHONE_SIMULATOR
 		NSLog(@"APPIRATER NOTE: iTunes App Store is not supported on the iOS simulator. Unable to open App Store page.");
-		#else
+#else
 		NSString *reviewURL = [templateReviewURL stringByReplacingOccurrencesOfString:@"APP_ID" withString:[NSString stringWithFormat:@"%@", _appId]];
 		[[UIApplication sharedApplication] openURL:[NSURL URLWithString:reviewURL]];
-		#endif
+#endif
 	}
 }
 
@@ -472,7 +515,11 @@ static BOOL _modalOpen = false;
 		[[UIApplication sharedApplication]setStatusBarStyle:_statusBarStyle animated:_usesAnimation];
 		BOOL usedAnimation = _usesAnimation;
 		[self setModalOpen:NO];
-		[[UIApplication sharedApplication].keyWindow.rootViewController dismissViewControllerAnimated:_usesAnimation completion:^{
+		
+		// get the top most controller (= the StoreKit Controller) and dismiss it
+		UIViewController *presentingController = [UIApplication sharedApplication].keyWindow.rootViewController;
+		presentingController = [self topMostViewController: presentingController];
+		[presentingController dismissViewControllerAnimated:_usesAnimation completion:^{
 			if ([self.sharedInstance.delegate respondsToSelector:@selector(appiraterDidDismissModalView:animated:)]) {
 				[self.sharedInstance.delegate appiraterDidDismissModalView:(Appirater *)self animated:usedAnimation];
 			}

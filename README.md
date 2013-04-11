@@ -8,8 +8,10 @@ It reminds the user to rate the app on the Appstore.
 See example/app.js for usage.
 The precompiled zip file can be found in the "dist" folder.
 
-## More Info
+## i18n
+Copy to [i18n](https://github.com/k0sukey/TiAppirater/tree/master/i18n) files in your Titanium project.
 
+## More Info
 The original library for this project can be found [here](https://github.com/arashpayan/appirater).
 
 

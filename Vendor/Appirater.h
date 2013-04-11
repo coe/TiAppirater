@@ -60,33 +60,33 @@ extern NSString *const kAppiraterReminderRequestDate;
  This is the message your users will see once they've passed the day+launches
  threshold.
  */
-#define APPIRATER_LOCALIZED_MESSAGE     NSLocalizedStringFromTable(@"If you enjoy using %@, would you mind taking a moment to rate it? It won't take more than a minute. Thanks for your support!", @"AppiraterLocalizable", nil)
+#define APPIRATER_LOCALIZED_MESSAGE     NSLocalizedString(@"If you enjoy using %@, would you mind taking a moment to rate it? It won't take more than a minute. Thanks for your support!", nil)
 #define APPIRATER_MESSAGE				[NSString stringWithFormat:APPIRATER_LOCALIZED_MESSAGE, APPIRATER_APP_NAME]
 
 /*
  This is the title of the message alert that users will see.
  */
-#define APPIRATER_LOCALIZED_MESSAGE_TITLE   NSLocalizedStringFromTable(@"Rate %@", @"AppiraterLocalizable", nil)
+#define APPIRATER_LOCALIZED_MESSAGE_TITLE   NSLocalizedString(@"Rate %@", nil)
 #define APPIRATER_MESSAGE_TITLE             [NSString stringWithFormat:APPIRATER_LOCALIZED_MESSAGE_TITLE, APPIRATER_APP_NAME]
 
 /*
  The text of the button that rejects reviewing the app.
  */
-#define APPIRATER_CANCEL_BUTTON			NSLocalizedStringFromTable(@"No, Thanks", @"AppiraterLocalizable", nil)
+#define APPIRATER_CANCEL_BUTTON			NSLocalizedString(@"No, Thanks", nil)
 
 /*
  Text of button that will send user to app review page.
  */
-#define APPIRATER_LOCALIZED_RATE_BUTTON NSLocalizedStringFromTable(@"Rate %@", @"AppiraterLocalizable", nil)
+#define APPIRATER_LOCALIZED_RATE_BUTTON NSLocalizedString(@"Rate %@", nil)
 #define APPIRATER_RATE_BUTTON			[NSString stringWithFormat:APPIRATER_LOCALIZED_RATE_BUTTON, APPIRATER_APP_NAME]
 
 /*
  Text for button to remind the user to review later.
  */
-#define APPIRATER_RATE_LATER			NSLocalizedStringFromTable(@"Remind me later", @"AppiraterLocalizable", nil)
+#define APPIRATER_RATE_LATER			NSLocalizedString(@"Remind me later", nil)
 
 @interface Appirater : NSObject <UIAlertViewDelegate, SKStoreProductViewControllerDelegate> {
-
+    
 	UIAlertView		*ratingAlert;
 }
 
@@ -143,10 +143,20 @@ extern NSString *const kAppiraterReminderRequestDate;
 + (void)userDidSignificantEvent:(BOOL)canPromptForRating;
 
 /*
+ Tells Appirater to show the prompt (a rating alert). The prompt will be showed
+ if there is connection available, the user hasn't declined to rate
+ or hasn't rated current version.
+ 
+ You could call to show the prompt regardless Appirater settings,
+ e.g., in case of some special event in your app.
+ */
++ (void)showPrompt;
+
+/*
  Tells Appirater to open the App Store page where the user can specify a
  rating for the app. Also records the fact that this has happened, so the
  user won't be prompted again to rate the app.
-
+ 
  The only case where you should call this directly is if your app has an
  explicit "Rate this app" command somewhere.  In all other cases, don't worry
  about calling this -- instead, just call the other functions listed above,
@@ -157,7 +167,7 @@ extern NSString *const kAppiraterReminderRequestDate;
 
 /*
  Tells Appirater to immediately close any open rating modals (e.g. StoreKit rating VCs).
-*/
+ */
 + (void)closeModal;
 
 @end
@@ -224,6 +234,11 @@ extern NSString *const kAppiraterReminderRequestDate;
  */
 + (void)setUsesAnimation:(BOOL)animation;
 
+/*
+ If set to YES, Appirater will open App Store link (instead of SKStoreProductViewController on iOS 6). Default NO.
+ */
++ (void)setOpenInAppStore:(BOOL)openInAppStore;
+
 @end
 
 
@@ -235,6 +250,6 @@ extern NSString *const kAppiraterReminderRequestDate;
  
  Calls [Appirater appLaunched:YES]. See appLaunched: for details of functionality.
  */
-+ (void)appLaunched __attribute__((deprecated)); 
++ (void)appLaunched __attribute__((deprecated));
 
 @end

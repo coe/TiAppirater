@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+	<string name="If you enjoy using %@, would you mind taking a moment to rate it? It won't take more than a minute. Thanks for your support!">Pokud se Vám aplikace %@ líbí, mohli byste ji prosím ohodnotit v App Store? Zabere to jen chvilku. Díky za Vaši podporu!</string>
+	<string name="Rate %@">Ohodnotit %@</string>
+	<string name="No, Thanks">Ne, díky</string>
+	<string name="Remind me later">Možná později</string>
+</resources>
